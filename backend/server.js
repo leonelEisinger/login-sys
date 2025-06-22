@@ -1,39 +1,68 @@
-const express = require('express');
-const { Client } = require('pg');
-const cors = require('cors');
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+require('dotenv').config()
+
+// configure the database and associate the models with it
+const db = require("./app/models");
+const { HOST } = require("./app/config/db.config");
 
 const app = express();
-app.use(express.json());
-app.use(cors());
+const port = process.env.PORT || 8080;
 
-const db = new Client({
-    host: "localhost",
-    user: "postgres",
-    password: "123",
-    database: "login-system",
-    port: "5432"
+var corsOptions = {
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'],
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'x-access-token'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
+
+// parse requests of content-type - application/json
+app.use(bodyParser.json());
+
+// parse requests of content-type - application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// simple route
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to the application." });
 });
 
-app.post('/login', async (req, res) => {
-    const sql = "SELECT * FROM users WHERE email = $1 AND password = $2";
-    //console.log('Recebido no body:', req.body);
+// set port, listen for requests
+app.listen(port, () => {
+  console.log(`[server]: Server is running at http://localhost:${port}.`);
+});
 
-    try {
-    db.query(sql, [req.body.email, req.body.password], (err, data) => {
-        //if(err) return res.json("Error");
+const Role = db.role;
 
-        if(data.length > 0) {
-            return res.json("Login Successul!")
-        } else {
-            return res.json("Email or Password is may be wrong")
-        }
-    })
-    } catch {
-        console.error("Erro na query:", err);
-        res.status(500).json({ error: "Erro no banco de dados" });
-    }
-})
+db.sequelize.sync({force: true}).then(() => {
+  console.log('Drop and Resync Db');
+  initial();
+});
 
-app.listen(8081, () =>{
-    console.log("Listening....")
-})
+// initial function helps us to create 3 rows in database: user, admin and moderator
+async function initial() {
+  const count = await Role.count();
+  if (count === 0) {
+    await Role.bulkCreate([
+      { id: 1, name: "user" },
+      { id: 2, name: "moderator" },
+      { id: 3, name: "admin" }
+    ]);
+    console.log("Roles inseridos com sucesso.");
+  } else {
+    console.log("Roles já existem. Nenhum dado inserido.");
+  }
+}
+
+
+// routes
+require('./app/routes/auth.routes')(app);
+require('./app/routes/user.routes')(app);
+
+
+
+ 
+
