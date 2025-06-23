@@ -1,3 +1,5 @@
+create database sistema_matricula;
+
 -- tabela aluno
 CREATE TABLE aluno (
   matricula VARCHAR PRIMARY KEY,
