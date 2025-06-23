@@ -8,6 +8,22 @@ const Op = db.Sequelize.Op;
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
+  // controllers/authController.js
+exports.signin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Add your authentication logic here
+    // Check user exists, verify password, etc.
+    
+    res.status(200).json({ message: 'Login successful' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Login failed' });
+  }
+};
+
+
 exports.signup = (req, res) => {
   // Save User to Database
   User.create({
@@ -127,4 +143,5 @@ exports.refreshToken = async (req, res) => {
   } catch (err) {
     return res.status(500).send({ message: err });
   }
+
 };

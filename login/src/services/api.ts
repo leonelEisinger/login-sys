@@ -2,11 +2,10 @@ import axios from 'axios';
 import TokenService from './token.service';
 
 const instance = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: 'http://localhost:5000/api', // Match your backend port
   headers: {
-    'Content-Type': 'application/json',
-    'x-access-token': 'application/json',
-  },
+    'Content-Type': 'application/json'
+  }
 });
 
 instance.interceptors.request.use(
