@@ -1,9 +1,16 @@
+// Método relacionado ao passo 1 e 2 do diagrama de sequência: solicitarDisciplinasDisponiveis()
+
 import express from 'express';
+import {
+  verificarAlunoExiste,
+  verificarDisciplinaExiste,
+  verificarJaMatriculado,
+  inserirMatricula,
+  removerTodasMatriculas,
+} from '../repository/matriculaRepository.js';
 import db from '../config/db.js';
 
 const router = express.Router();
-
-// ROTA: Confirmar matrícula (inserção)
 router.post('/confirmar', async (req, res) => {
   const { matricula, codigosDisciplinas } = req.body;
 
@@ -12,7 +19,7 @@ router.post('/confirmar', async (req, res) => {
   }
 
   try {
-    const aluno = await db.query('SELECT 1 FROM aluno WHERE matricula = $1', [matricula]);
+    const aluno = await verificarAlunoExiste(matricula);
     if (aluno.rows.length === 0) {
       return res.status(404).json({ error: 'Aluno não encontrado' });
     }
@@ -20,25 +27,19 @@ router.post('/confirmar', async (req, res) => {
     await db.query('BEGIN');
 
     for (const codigo of codigosDisciplinas) {
-      const disciplina = await db.query('SELECT 1 FROM disciplina WHERE codigo = $1', [codigo]);
+      const disciplina = await verificarDisciplinaExiste(codigo);
       if (disciplina.rows.length === 0) {
         await db.query('ROLLBACK');
         return res.status(404).json({ error: `Disciplina ${codigo} não encontrada` });
       }
 
-      const jaMatriculado = await db.query(
-        'SELECT 1 FROM matricula WHERE matricula_aluno = $1 AND codigo_disciplina = $2',
-        [matricula, codigo]
-      );
+      const jaMatriculado = await verificarJaMatriculado(matricula, codigo);
       if (jaMatriculado.rows.length > 0) {
         await db.query('ROLLBACK');
         return res.status(409).json({ error: `Aluno já matriculado na disciplina ${codigo}` });
       }
 
-      await db.query(
-        'INSERT INTO matricula (matricula_aluno, codigo_disciplina) VALUES ($1, $2)',
-        [matricula, codigo]
-      );
+      await inserirMatricula(matricula, codigo); // 💾 Registro persistido
     }
 
     await db.query('COMMIT');
@@ -51,6 +52,7 @@ router.post('/confirmar', async (req, res) => {
 });
 
 // ROTA: Atualizar matrícula (substituir disciplinas)
+// Corresponde ao fluxo alternativo de alteração de matrícula
 router.put('/atualizar', async (req, res) => {
   const { matricula, novasDisciplinas } = req.body;
 
@@ -59,26 +61,22 @@ router.put('/atualizar', async (req, res) => {
   }
 
   try {
-    const aluno = await db.query('SELECT 1 FROM aluno WHERE matricula = $1', [matricula]);
+    const aluno = await verificarAlunoExiste(matricula);
     if (aluno.rows.length === 0) {
       return res.status(404).json({ error: 'Aluno não encontrado' });
     }
 
     await db.query('BEGIN');
-
-    await db.query('DELETE FROM matricula WHERE matricula_aluno = $1', [matricula]);
+    await removerTodasMatriculas(matricula); // 🧼 Remoção de vínculos antigos
 
     for (const codigo of novasDisciplinas) {
-      const disciplina = await db.query('SELECT 1 FROM disciplina WHERE codigo = $1', [codigo]);
+      const disciplina = await verificarDisciplinaExiste(codigo);
       if (disciplina.rows.length === 0) {
         await db.query('ROLLBACK');
         return res.status(404).json({ error: `Disciplina ${codigo} não encontrada` });
       }
 
-      await db.query(
-        'INSERT INTO matricula (matricula_aluno, codigo_disciplina) VALUES ($1, $2)',
-        [matricula, codigo]
-      );
+      await inserirMatricula(matricula, codigo); // 🔁 Inserção de novas escolhas
     }
 
     await db.query('COMMIT');
@@ -90,7 +88,7 @@ router.put('/atualizar', async (req, res) => {
   }
 });
 
-// Log de rota para debug
+// Middleware de log para rastrear chamadas de rota
 router.use((req, res, next) => {
   console.log(`Rota [MATRÍCULA] acessada: ${req.method} ${req.originalUrl}`);
   next();

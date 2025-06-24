@@ -1,3 +1,7 @@
+// Corresponde à verificação do período de matrícula (verificarPeriodoMatricula)
+// Fluxo 3 do caso de uso "Realizar Matrícula"
+
+
 import axios from 'axios';
 
 const API_URL = 'http://localhost:3001/api/matricula';

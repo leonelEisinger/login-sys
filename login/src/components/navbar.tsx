@@ -1,6 +1,6 @@
 import { AppBar, Box, Toolbar, Button, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { useModo } from '../context/ModoContefxt';
+import { useModo } from '../context/ModoContext';
 
 export default function NavBar() {
   const { modo, trocarModo } = useModo();
