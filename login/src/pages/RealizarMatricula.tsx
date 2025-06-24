@@ -7,13 +7,16 @@ import {
   Box,
   Chip,
 } from "@mui/material";
-import MatriculaService from "../services/matricula.service";
+import MatriculaService from "../services/matricula.service"; // Serviço de matrícula encapsulado
+
 
 export default function RealizarMatricula() {
+  // Estados do componente
   const [matricula, setMatricula] = useState("");
   const [codigo, setCodigo] = useState("");
   const [codigosDisciplinas, setCodigosDisciplinas] = useState<string[]>([]);
   const [mensagem, setMensagem] = useState("");
+
 
   const handleAdicionarCodigo = () => {
     if (codigo && !codigosDisciplinas.includes(codigo)) {
@@ -22,10 +25,12 @@ export default function RealizarMatricula() {
     }
   };
 
+
   const handleRemoverCodigo = (remover: string) => {
     setCodigosDisciplinas(codigosDisciplinas.filter((c) => c !== remover));
   };
 
+  // Envia os dados para confirmação
   const handleConfirmar = () => {
     MatriculaService.confirmarMatricula({ matricula, codigosDisciplinas })
       .then(() => {
@@ -34,8 +39,7 @@ export default function RealizarMatricula() {
         setCodigosDisciplinas([]);
       })
       .catch((err) => {
-        const msg =
-          err.response?.data?.error || "❌ Erro ao realizar matrícula";
+        const msg = err.response?.data?.error || "❌ Erro ao realizar matrícula";
         setMensagem(msg);
       });
   };
@@ -58,8 +62,13 @@ export default function RealizarMatricula() {
             fullWidth
             value={codigo}
             onChange={(e) => setCodigo(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleAdicionarCodigo()} // Adiciona com Enter
           />
-          <Button variant="contained" onClick={handleAdicionarCodigo}>
+          <Button 
+            variant="contained" 
+            onClick={handleAdicionarCodigo}
+            disabled={!codigo}
+          >
             Adicionar
           </Button>
         </Box>
@@ -71,6 +80,7 @@ export default function RealizarMatricula() {
               label={cod}
               onDelete={() => handleRemoverCodigo(cod)}
               sx={{ mr: 1, mb: 1 }}
+              color="primary"
             />
           ))}
         </Box>
@@ -90,6 +100,7 @@ export default function RealizarMatricula() {
           <Typography
             mt={2}
             color={mensagem.startsWith("✅") ? "green" : "error"}
+            sx={{ fontWeight: 'bold' }}
           >
             {mensagem}
           </Typography>

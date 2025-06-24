@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+// Define a URL base da API para alunos
 const API = 'http://localhost:3001/api/aluno';
 
 export default {
+
   listarAlunos() {
     return axios.get(`${API}/`);
   },
@@ -27,6 +29,7 @@ export default {
   }>) {
     return axios.put(`${API}/${matricula}`, aluno);
   },
+
 
   removerAluno(matricula: string) {
     return axios.delete(`${API}/${matricula}`);

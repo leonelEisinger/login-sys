@@ -1,4 +1,4 @@
-// Método relacionado ao passo 1 e 2 do diagrama de sequência: solicitarDisciplinasDisponiveis()
+// Metodo relacionado ao passo 1 e 2 do diagrama de sequencia: solicitarDisciplinasDisponiveis()
 
 import express from 'express';
 import {
@@ -39,7 +39,7 @@ router.post('/confirmar', async (req, res) => {
         return res.status(409).json({ error: `Aluno já matriculado na disciplina ${codigo}` });
       }
 
-      await inserirMatricula(matricula, codigo); // 💾 Registro persistido
+      await inserirMatricula(matricula, codigo);
     }
 
     await db.query('COMMIT');
@@ -51,7 +51,6 @@ router.post('/confirmar', async (req, res) => {
   }
 });
 
-// ROTA: Atualizar matrícula (substituir disciplinas)
 // Corresponde ao fluxo alternativo de alteração de matrícula
 router.put('/atualizar', async (req, res) => {
   const { matricula, novasDisciplinas } = req.body;
@@ -67,7 +66,7 @@ router.put('/atualizar', async (req, res) => {
     }
 
     await db.query('BEGIN');
-    await removerTodasMatriculas(matricula); // 🧼 Remoção de vínculos antigos
+    await removerTodasMatriculas(matricula);
 
     for (const codigo of novasDisciplinas) {
       const disciplina = await verificarDisciplinaExiste(codigo);
@@ -76,7 +75,7 @@ router.put('/atualizar', async (req, res) => {
         return res.status(404).json({ error: `Disciplina ${codigo} não encontrada` });
       }
 
-      await inserirMatricula(matricula, codigo); // 🔁 Inserção de novas escolhas
+      await inserirMatricula(matricula, codigo);
     }
 
     await db.query('COMMIT');

@@ -1,3 +1,5 @@
+//configuração para o acesso do banco de dados
+
 import pg from 'pg';
 const { Pool } = pg;
 

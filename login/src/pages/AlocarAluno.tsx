@@ -14,7 +14,10 @@ import {
 } from "@mui/material";
 import axios from "axios";
 
+// faz a alocação dos alunos nas disciplinas selecionadas
+
 export default function AlocarAluno() {
+  
   const [alunos, setAlunos] = useState<any[]>([]);
   const [disciplinas, setDisciplinas] = useState<any[]>([]);
   const [alunoSelecionado, setAlunoSelecionado] = useState("");
@@ -31,14 +34,17 @@ export default function AlocarAluno() {
       .get("http://localhost:3001/api/disciplinas")
       .then((res) => setDisciplinas(res.data))
       .catch(() => setErro("Erro ao carregar disciplinas"));
-  }, []);
+  }, []); // Executa apenas uma vez no montar do componente
 
+  // Função para confirmar alocação
   const handleConfirmar = () => {
+    // Validação dos campos
     if (!alunoSelecionado || selecionadas.length === 0) {
       setErro("Selecione um aluno e pelo menos uma disciplina");
       return;
     }
 
+    // Envia dados para a API
     axios
       .post("http://localhost:3001/api/matricula/confirmar", {
         matricula: alunoSelecionado,
@@ -47,6 +53,7 @@ export default function AlocarAluno() {
       .then(() => {
         setErro("");
         alert("✅ Aluno alocado com sucesso!");
+        // Reseta os estados após sucesso
         setAlunoSelecionado("");
         setSelecionadas([]);
       })
@@ -56,10 +63,12 @@ export default function AlocarAluno() {
       });
   };
 
+  // Renderização do componente
   return (
     <Container sx={{ mt: 4 }}>
       <Typography variant="h5">Alocar Aluno em Disciplinas</Typography>
 
+      {/* Seletor de aluno */}
       <FormControl fullWidth sx={{ mt: 3 }}>
         <InputLabel>Selecione o Aluno</InputLabel>
         <Select
@@ -75,6 +84,7 @@ export default function AlocarAluno() {
         </Select>
       </FormControl>
 
+      {/* Seletor de disciplinas (múltipla escolha) */}
       <Typography variant="h6" sx={{ mt: 4 }}>
         Disciplinas Disponíveis:
       </Typography>
@@ -96,6 +106,7 @@ export default function AlocarAluno() {
         </Select>
       </FormControl>
 
+      {/* Botão de confirmação */}
       <Box mt={2}>
         <Button
           variant="contained"
@@ -106,6 +117,7 @@ export default function AlocarAluno() {
         </Button>
       </Box>
 
+      {/* Exibição de erros */}
       {erro && (
         <Typography color="error" sx={{ mt: 2 }}>
           {erro}

@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+// Define a URL base da API para disciplinas
 const API = 'http://localhost:3001/api/disciplina';
 
 export default {
