@@ -1,67 +1,100 @@
-import { useEffect, useState } from 'react';
+import { useState } from "react";
 import {
   Container,
   Typography,
-  Checkbox,
+  TextField,
   Button,
-  List,
-  ListItem,
-  ListItemText
-} from '@mui/material';
-import { AlunoDTO } from '../models/AlunoDTO';
-import { DisciplinaDTO } from '../models/DisciplinaDTO';
-import MatriculaService from '../services/matricula.service';
-import DisciplinaService from '../services/disciplina.service';
-
-const alunoMock: AlunoDTO = {
-  matricula: '123456',
-  nome: 'João da Silva',
-  curso: 'Sistemas de Informação',
-};
+  Box,
+  Chip,
+} from "@mui/material";
+import MatriculaService from "../services/matricula.service";
 
 export default function RealizarMatricula() {
-  const [disciplinas, setDisciplinas] = useState<DisciplinaDTO[]>([]);
-  const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set());
-  const [status, setStatus] = useState('');
+  const [matricula, setMatricula] = useState("");
+  const [codigo, setCodigo] = useState("");
+  const [codigosDisciplinas, setCodigosDisciplinas] = useState<string[]>([]);
+  const [mensagem, setMensagem] = useState("");
 
-  useEffect(() => {
-    DisciplinaService.listarDisciplinas()
-      .then(res => setDisciplinas(res.data))
-      .catch(() => setStatus('Erro ao carregar disciplinas'));
-  }, []);
+  const handleAdicionarCodigo = () => {
+    if (codigo && !codigosDisciplinas.includes(codigo)) {
+      setCodigosDisciplinas([...codigosDisciplinas, codigo]);
+      setCodigo("");
+    }
+  };
 
-  const toggleSelecionada = (codigo: string) => {
-    setSelecionadas(prev => {
-      const next = new Set(prev);
-      next.has(codigo) ? next.delete(codigo) : next.add(codigo);
-      return next;
-    });
+  const handleRemoverCodigo = (remover: string) => {
+    setCodigosDisciplinas(codigosDisciplinas.filter((c) => c !== remover));
   };
 
   const handleConfirmar = () => {
-    const codigos = Array.from(selecionadas);
-    MatriculaService.confirmarMatricula(alunoMock, codigos)
-      .then(() => setStatus('✅ Matrícula confirmada!'))
-      .catch(() => setStatus('❌ Erro na matrícula'));
+    MatriculaService.confirmarMatricula({ matricula, codigosDisciplinas })
+      .then(() => {
+        setMensagem("✅ Matrícula realizada com sucesso!");
+        setMatricula("");
+        setCodigosDisciplinas([]);
+      })
+      .catch((err) => {
+        const msg =
+          err.response?.data?.error || "❌ Erro ao realizar matrícula";
+        setMensagem(msg);
+      });
   };
 
   return (
     <Container sx={{ mt: 4 }}>
-      <Typography variant="h4">Matrícula do Aluno</Typography>
-      <Typography>Aluno: {alunoMock.nome}</Typography>
-      <List>
-        {disciplinas.map(d => (
-          <ListItem key={d.codigo}>
-            <Checkbox
-              checked={selecionadas.has(d.codigo)}
-              onChange={() => toggleSelecionada(d.codigo)}
+      <Typography variant="h4">Realizar Matrícula</Typography>
+
+      <Box mt={2}>
+        <TextField
+          label="Matrícula do Aluno"
+          fullWidth
+          value={matricula}
+          onChange={(e) => setMatricula(e.target.value)}
+        />
+
+        <Box display="flex" gap={2} mt={2}>
+          <TextField
+            label="Código da Disciplina"
+            fullWidth
+            value={codigo}
+            onChange={(e) => setCodigo(e.target.value)}
+          />
+          <Button variant="contained" onClick={handleAdicionarCodigo}>
+            Adicionar
+          </Button>
+        </Box>
+
+        <Box mt={2}>
+          {codigosDisciplinas.map((cod) => (
+            <Chip
+              key={cod}
+              label={cod}
+              onDelete={() => handleRemoverCodigo(cod)}
+              sx={{ mr: 1, mb: 1 }}
             />
-            <ListItemText primary={`${d.nome} (${d.codigo})`} secondary={`Vagas: ${d.vagas}`} />
-          </ListItem>
-        ))}
-      </List>
-      <Button variant="contained" onClick={handleConfirmar}>Confirmar Matrícula</Button>
-      {status && <Typography sx={{ mt: 2 }}>{status}</Typography>}
+          ))}
+        </Box>
+
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{ mt: 3 }}
+          onClick={handleConfirmar}
+          disabled={!matricula || codigosDisciplinas.length === 0}
+        >
+          Confirmar Matrícula
+        </Button>
+
+        {mensagem && (
+          <Typography
+            mt={2}
+            color={mensagem.startsWith("✅") ? "green" : "error"}
+          >
+            {mensagem}
+          </Typography>
+        )}
+      </Box>
     </Container>
   );
 }

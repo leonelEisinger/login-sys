@@ -1,13 +1,11 @@
-
 import axios from 'axios';
 
-const API = 'http://localhost:3001/api/matricula';
+const API_URL = 'http://localhost:3001/api/matricula';
 
-export default {
-  confirmarMatricula(aluno: { matricula: string }, codigosDisciplinas: string[]) {
-    return axios.post(`${API}/confirmar`, { 
-      matricula: aluno.matricula,
-      codigosDisciplinas
-    });
+class MatriculaService {
+  confirmarMatricula(data: { matricula: string; codigosDisciplinas: string[] }) {
+    return axios.post(`${API_URL}/confirmar`, data);
   }
-};
+}
+
+export default new MatriculaService();
